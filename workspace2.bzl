@@ -15,6 +15,7 @@ load("//tools/toolchains/embedded/arm-linux:arm_linux_toolchain_configure.bzl", 
 load("//third_party:repo.bzl", "tf_http_archive", "tf_mirror_urls")
 load("//third_party/clang_toolchain:cc_configure_clang.bzl", "cc_download_clang_toolchain")
 load("//third_party/llvm:setup.bzl", "llvm_setup")
+load(":vendored.bzl", "vendored")
 
 # Import third party repository rules. See go/tfbr-thirdparty.
 load("//third_party/absl:workspace.bzl", absl = "repo")
@@ -38,7 +39,7 @@ load("//tools/toolchains/remote_config:configs.bzl", "initialize_rbe_configs")
 load("//tools/toolchains/remote:configure.bzl", "remote_execution_configure")
 load("//tools/toolchains/clang6:repo.bzl", "clang6_configure")
 
-def _initialize_third_party(xla_path):
+def _initialize_third_party():
     """ Load third party repositories.  See above load() statements. """
     absl()
     benchmark()
@@ -53,7 +54,7 @@ def _initialize_third_party(xla_path):
     tensorrt()
     triton()
 
-    native.local_repository(name = "tsl", path = xla_path + "/third_party/tsl")
+    vendored(name = "tsl", relpath = "third_party/tsl")
 
 # Toolchains & platforms required by Tensorflow to build.
 def _tf_toolchains():
@@ -604,7 +605,7 @@ def _tf_repositories():
 
 # buildifier: disable=function-docstring
 # buildifier: disable=unnamed-macro
-def workspace(xla_path = "."):
+def workspace():
     # Check the bazel version before executing any repository rules, in case
     # those rules rely on the version we require here.
     versions.check("1.0.0")
@@ -613,7 +614,7 @@ def workspace(xla_path = "."):
     _tf_toolchains()
 
     # Import third party repositories according to go/tfbr-thirdparty.
-    _initialize_third_party(xla_path)
+    _initialize_third_party()
 
     # Import all other repositories. This should happen before initializing
     # any external repositories, because those come with their own
